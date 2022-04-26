@@ -1,0 +1,5 @@
+[user]
+    email = "timweightman@gmail.com"
+    name = "timweightman"
+[core]
+    sshCommand = "ssh -i ~/.ssh/id_ed25519_github_personal"
