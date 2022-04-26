@@ -7,3 +7,7 @@
 [url "git@github.com-work:applatform"]
     insteadOf = git@github.com:applatform
     pushInsteadOf = git@github.com:applatform
+
+[url "git@github.com-work:timweightman-zai"]
+    insteadOf = git@github.com:timweightman-zai
+    pushInsteadOf = git@github.com:timweightman-zai
