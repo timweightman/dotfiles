@@ -104,4 +104,11 @@ source $ZSH/oh-my-zsh.sh
 eval "$(ssh-agent -s)" >> /dev/null
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_personal -q
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_work -q
-alias config='/usr/bin/git --git-dir=/Users/timweightman/Work/dotfiles/ --work-tree=/Users/timweightman'
+
+# Add the `dotfiles` alias for running `git` commands on my dotfiles repository
+alias dotfiles='/usr/bin/git --git-dir=/Users/timweightman/Work/dotfiles/ --work-tree=/Users/timweightman'
+
+# Node Version Manager (nvm)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
