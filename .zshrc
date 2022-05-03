@@ -112,3 +112,10 @@ alias dotfiles='/usr/bin/git --git-dir=/Users/timweightman/Work/dotfiles/ --work
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# Homebrew
+path+=/opt/homebrew/bin
+path+=/opt/homebrew/sbin
+
+# Alias the AWS Login script from the ~/work/okta-aws repo
+alias awslogin='~/Work/okta-aws/app-aws-login.py'
