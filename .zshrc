@@ -124,8 +124,14 @@ alias awslogin='~/Work/okta-aws/app-aws-login.py'
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 function awsironman() {
+  unset ironman_account
+  case "$1" in
+    prod) ironman_account="pu-legacy" ;;
+    *)    ironman_account="pu-nonprod" ;;
+  esac
+
   # Authenticate using AWS CLI
-  awslogin pu-legacy
+  awslogin $ironman_account
 
   # Get list of EC2 instance id's that match "ironman worker host"
   aws ec2 describe-instances \
