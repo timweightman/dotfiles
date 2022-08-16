@@ -119,3 +119,35 @@ path+=/opt/homebrew/sbin
 
 # Alias the AWS Login script from the ~/work/okta-aws repo
 alias awslogin='~/Work/okta-aws/app-aws-login.py'
+
+# Add yarn binary to path
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+
+function awsironman() {
+  # Authenticate using AWS CLI
+  awslogin pu-legacy
+
+  # Get list of EC2 instance id's that match "ironman worker host"
+  aws ec2 describe-instances \
+    --filters Name=tag-key,Values=Name \
+    --query "Reservations[*].Instances[*].{Instance:InstanceId,AZ:Placement.AvailabilityZone,Name:Tags[?Key=='Name']|[0].Value}" \
+    --output table | grep --ignore-case "ironman worker host"
+
+  # Read input from user for instance id to start session
+  unset instanceId
+  instanceId=
+  vared -p "On which instance would you like to start a session? " instanceId
+
+  echo "
+Selected Ironman instance: $instanceId
+
+You will need to run this to load the rails console, once the session is started:
+
+    sudo -i
+    docker exec -it \$(docker ps | grep ironman | awk '{print \$1}' | head -n 1) bash
+    ./scripts/entrypoint.sh rails c
+
+"
+
+  aws ssm start-session --target $instanceId
+}
