@@ -123,9 +123,19 @@ alias awslogin='~/Work/okta-aws/app-aws-login.py'
 # Add yarn binary to path
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
+# ======= BEGIN: IRONMAN STUFF ======= #
+# https://webuildgreatproduct.atlassian.net/wiki/spaces/HKT/pages/199352909830/Setup+Ironman+in+local+MacOS
+# PostgreSQL path
+export PATH="/opt/homebrew/opt/postgresql@12/bin:$PATH"
+eval "$(rbenv init -)"
+
+# start a rails terminal session in Ironman
 function awsironman() {
+  environment=$1
+
   unset ironman_account
-  case "$1" in
+  case "$environment" in
+    prelive) ironman_account="pu-legacy" ;;
     prod) ironman_account="pu-legacy" ;;
     *)    ironman_account="pu-nonprod" ;;
   esac
@@ -137,7 +147,7 @@ function awsironman() {
   aws ec2 describe-instances \
     --filters Name=tag-key,Values=Name \
     --query "Reservations[*].Instances[*].{Instance:InstanceId,AZ:Placement.AvailabilityZone,Name:Tags[?Key=='Name']|[0].Value}" \
-    --output table | grep --ignore-case "ironman worker host"
+    --output table | grep --ignore-case "ironman worker host $environment"
 
   # Read input from user for instance id to start session
   unset instanceId
@@ -157,3 +167,10 @@ You will need to run this to load the rails console, once the session is started
 
   aws ssm start-session --target $instanceId
 }
+
+# log into docker by getting password from AWS pu-nonprod
+function dockerlogin() {
+  awslogin pu-nonprod
+  echo $(aws ecr get-login-password --region ap-southeast-2) | docker login --username AWS --password-stdin 155933255252.dkr.ecr.ap-southeast-2.amazonaws.com
+}
+# ======= END: IRONMAN STUFF ======= #
