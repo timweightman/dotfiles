@@ -124,10 +124,6 @@ alias awslogin='~/Work/okta-aws/app-aws-login.py'
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 # ======= BEGIN: IRONMAN STUFF ======= #
-# https://webuildgreatproduct.atlassian.net/wiki/spaces/HKT/pages/199352909830/Setup+Ironman+in+local+MacOS
-# PostgreSQL path
-export PATH="/opt/homebrew/opt/postgresql@12/bin:$PATH"
-eval "$(rbenv init -)"
 
 # start a rails terminal session in Ironman
 function awsironman() {
