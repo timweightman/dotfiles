@@ -4,9 +4,9 @@
 [core]
     sshCommand = "ssh -i ~/.ssh/id_ed25519_github_work"
 
-[url "git@github.com-work:applatform"]
-    insteadOf = git@github.com:applatform
-    pushInsteadOf = git@github.com:applatform
+[url "git@github.com-work"]
+    insteadOf = git@github.com
+    pushInsteadOf = git@github.com
 
 [url "git@github.com-work:timweightman-zai"]
     insteadOf = git@github.com:timweightman-zai

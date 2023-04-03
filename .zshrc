@@ -74,6 +74,8 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
+source /opt/homebrew/opt/chruby/share/chruby/chruby.sh
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -131,9 +133,9 @@ function awsironman() {
 
   unset ironman_account
   case "$environment" in
-    prelive) ironman_account="pu-legacy" ;;
-    prod) ironman_account="pu-legacy" ;;
-    *)    ironman_account="pu-nonprod" ;;
+    prelive) ironman_account="PU-legacy" ;;
+    prod) ironman_account="PU-legacy" ;;
+    *)    ironman_account="PU-nonprod" ;;
   esac
 
   # Authenticate using AWS CLI
@@ -166,7 +168,14 @@ You will need to run this to load the rails console, once the session is started
 
 # log into docker by getting password from AWS pu-nonprod
 function dockerlogin() {
-  awslogin pu-nonprod
+  awslogin PU-nonprod
   echo $(aws ecr get-login-password --region ap-southeast-2) | docker login --username AWS --password-stdin 155933255252.dkr.ecr.ap-southeast-2.amazonaws.com
 }
 # ======= END: IRONMAN STUFF ======= #
+# MYSQL - via homebrew
+export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="/Users/timweightman/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+# pnpm end
