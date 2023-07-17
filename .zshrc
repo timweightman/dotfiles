@@ -179,3 +179,5 @@ export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
 export PNPM_HOME="/Users/timweightman/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 # pnpm end
+
+eval "$(rbenv init - zsh)"
