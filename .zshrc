@@ -1,183 +1,44 @@
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+# Install PowerLevel10k from here:
+# https://github.com/romkatv/powerlevel10k?tab=readme-ov-file#installation
 
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.zplug/repos/robbyrussell/oh-my-zsh"
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
 
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+source ~/.config/zsh/powerlevel10k/powerlevel10k.zsh-theme
 
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
 
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+# engage ZSH autocompletion
+autoload -Uz compinit && compinit
 
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
-# Uncomment the following line to change how often to auto-update (in days).
-# zstyle ':omz:update' frequency 13
+# case-insensitive autocompletion matching
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
 
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
+# arrow key autocompletion navigation
+zstyle ':completion:*' menu yes select
 
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
 
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
+# up line or beginning search history backward with up arrow key
+autoload -Uz up-line-or-beginning-search
+zle -N up-line-or-beginning-search
+bindkey "^[[A" up-line-or-beginning-search
+# In theory the below should work to look up key code, but for some reason
+# it produces key code "^[OB", and doesn't work
+# bindkey "${key[Up]}" down-line-or-beginning-search
 
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
 
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
-
-source $ZSH/oh-my-zsh.sh
-
-source /opt/homebrew/opt/chruby/share/chruby/chruby.sh
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
-# Silently start SSH agent and add keys
-eval "$(ssh-agent -s)" >> /dev/null
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_personal -q
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519_github_work -q
-
-# Add the `dotfiles` alias for running `git` commands on my dotfiles repository
-alias dotfiles='/usr/bin/git --git-dir=/Users/timweightman/Work/dotfiles/ --work-tree=/Users/timweightman'
-
-# Node Version Manager (nvm)
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# Homebrew
-path+=/opt/homebrew/bin
-path+=/opt/homebrew/sbin
-
-# Alias the AWS Login script from the ~/work/okta-aws repo
-alias awslogin='~/Work/okta-aws/app-aws-login.py'
-
-# Add yarn binary to path
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-
-# ======= BEGIN: IRONMAN STUFF ======= #
-
-# start a rails terminal session in Ironman
-function awsironman() {
-  environment=$1
-
-  unset ironman_account
-  case "$environment" in
-    prelive) ironman_account="PU-legacy" ;;
-    prod) ironman_account="PU-legacy" ;;
-    *)    ironman_account="PU-nonprod" ;;
-  esac
-
-  # Authenticate using AWS CLI
-  awslogin $ironman_account
-
-  # Get list of EC2 instance id's that match "ironman worker host"
-  aws ec2 describe-instances \
-    --filters Name=tag-key,Values=Name \
-    --query "Reservations[*].Instances[*].{Instance:InstanceId,AZ:Placement.AvailabilityZone,Name:Tags[?Key=='Name']|[0].Value}" \
-    --output table | grep --ignore-case "ironman worker host $environment"
-
-  # Read input from user for instance id to start session
-  unset instanceId
-  instanceId=
-  vared -p "On which instance would you like to start a session? " instanceId
-
-  echo "
-Selected Ironman instance: $instanceId
-
-You will need to run this to load the rails console, once the session is started:
-
-    sudo -i
-    docker exec -it \$(docker ps | grep ironman | awk '{print \$1}' | head -n 1) bash
-    ./scripts/entrypoint.sh rails c
-
-"
-
-  aws ssm start-session --target $instanceId
-}
-
-# log into docker by getting password from AWS pu-nonprod
-function dockerlogin() {
-  awslogin PU-nonprod
-  echo $(aws ecr get-login-password --region ap-southeast-2) | docker login --username AWS --password-stdin 155933255252.dkr.ecr.ap-southeast-2.amazonaws.com
-}
-# ======= END: IRONMAN STUFF ======= #
-# MYSQL - via homebrew
-export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
-
-# pnpm
-export PNPM_HOME="/Users/timweightman/Library/pnpm"
-export PATH="$PNPM_HOME:$PATH"
-# pnpm end
-
-eval "$(rbenv init - zsh)"
+# down line or beginning search history forward with down arrow key
+autoload -Uz down-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey "^[[B" down-line-or-beginning-search
+# In theory the below should work to look up key code, but for some reason
+# it produces key code "^[OB", and doesn't work
+# bindkey "${key[Down]}" down-line-or-beginning-search

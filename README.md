@@ -1,6 +1,26 @@
 # dotfiles
 Including ZSH (oh-my-zsh), Git config (personal and work), SSH config (personal and work)
 
+## General idea
+1. Clone this repo to your user root (`~/dotfiles` or `$HOME/dotfiles`)
+1. Create a `.zshrc` in your user root, and add:
+    ```
+    source ~/dotfiles/.zshrc
+    ```
+1. Create a `.gitconfig`, and add
+    ```
+    [include]
+        path = ~/dotfiles/.gitconfig
+    ```
+1. If you're using *separate* work / personal GitHub profiles or need to specify your work email address, be sure to uncomment the relevant sections in `~/dotfiles/.gitconfig` and update them to match the correct GitHub email, folder, etc.
+
+    You will also need to check / update the `~/dotfiles/.ssh/config` as well to make use of the correct SSH key(s).
+
+    This might include commenting or uncommenting the `[core]` and `[url ...]` sections of one or both of `.gitconfig-personal` or `.gitconfig-work` as appropriate.
+
+    You'll have to think it over and work that part out yourself case-by-case depending if you're using the same or separate SSH key(s), GitHub account email(s), etc.
+
+
 ## How I set this repo up
 
 I followed [this guide](https://www.atlassian.com/git/tutorials/dotfiles) with a few notable exceptions:
