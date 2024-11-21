@@ -14,6 +14,10 @@ source ~/.config/zsh/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 
+# enable extended glob patterns
+setopt extendedglob
+
+
 # engage ZSH autocompletion
 autoload -Uz compinit && compinit
 
