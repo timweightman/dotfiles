@@ -12,7 +12,8 @@ This repo covers my very minimal setup for ZSH and a couple of other config/dotf
     [include]
         path = ~/dotfiles/.gitconfig
     ```
-1. If you're using *separate* work / personal GitHub profiles or need to specify your work email address, be sure to uncomment the relevant sections in `~/dotfiles/.gitconfig` and update them to match the correct GitHub email, folder, etc.
+1. If you have multiple GitHub profiles (separate for work, personal...), then it is easier to keep this repo under you personal profile, and invite your work profile as a collaborator on the repo, to be able to clone and push updates more easily without the extra folder and SSH configuration.
+1. HOWEVER, if you really need to specify your work and personal things separately email address, be sure to uncomment the relevant sections in `~/dotfiles/.gitconfig` and update them to match the correct GitHub email, folder, etc.
 
     You will also need to check / update the `~/dotfiles/.ssh/config` as well to make use of the correct SSH key(s).
 
