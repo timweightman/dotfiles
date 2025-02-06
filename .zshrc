@@ -46,3 +46,33 @@ bindkey "^[[B" down-line-or-beginning-search
 # In theory the below should work to look up key code, but for some reason
 # it produces key code "^[OB", and doesn't work
 # bindkey "${key[Down]}" down-line-or-beginning-search
+
+
+# custom shortcut functions for specific tasks
+
+# function to completely wipe Docker
+function tw_docker_wipe() {
+  if read -q "confirm?This will stop all docker containers, and prune all containers, images, volumes and networks - and then do a docker system prune including volumes. Are you sure? (y/N) "; then
+    echo
+    echo "Stopping docker..."
+    docker stop $(docker ps -aq)
+
+    echo "Pruning containers..."
+    docker container prune -f
+    echo "Pruning images..."
+    docker image prune -af
+    echo "Pruning volumes..."
+    docker volume prune -f
+    echo "Pruning networks..."
+    docker network prune -f
+    echo "Pruning system including volumes..."
+    docker system prune -af --volumes
+
+    echo
+    echo "Done – Good luck!"
+  else
+      echo
+      echo "Cancelled."
+  fi
+
+}
