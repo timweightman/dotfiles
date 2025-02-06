@@ -52,7 +52,12 @@ bindkey "^[[B" down-line-or-beginning-search
 
 # function to completely wipe Docker
 function tw_docker_wipe() {
-  if read -q "confirm?This will stop all docker containers, and prune all containers, images, volumes and networks - and then do a docker system prune including volumes. Are you sure? (y/N) "; then
+  if read -q "confirm?This will:
+  • Stop all docker containers
+  • Prune all containers, images, volumes and networks
+  • Do a docker system prune including volumes
+  • Shut down docker-compose, removing orphans and volumes
+  Are you sure? (y/N) "; then
     echo
     echo "Stopping docker..."
     docker stop $(docker ps -aq)
@@ -67,6 +72,10 @@ function tw_docker_wipe() {
     docker network prune -f
     echo "Pruning system including volumes..."
     docker system prune -af --volumes
+
+    echo
+    echo "Shutting down docker-compose, removing orphans and volumes..."
+    docker-compose down --remove-orphans --volumes
 
     echo
     echo "Done – Good luck!"
