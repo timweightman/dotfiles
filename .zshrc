@@ -47,8 +47,27 @@ bindkey "^[[B" down-line-or-beginning-search
 # it produces key code "^[OB", and doesn't work
 # bindkey "${key[Down]}" down-line-or-beginning-search
 
-
 # custom shortcut functions for specific tasks
+# tw <command>
+function tw() {
+  case "$1" in
+    dw)
+      tw_docker_wipe
+      ;;
+
+    gbw)
+      tw_git_branch_wipe
+      ;;
+
+    *)
+      cat << EndOfMessage
+Usage: tw <command>
+Commands:
+  dw - Docker wipe
+  gbw - Git branches wipe
+EndOfMessage
+  esac
+}
 
 # function to completely wipe Docker
 function tw_docker_wipe() {
@@ -80,8 +99,30 @@ function tw_docker_wipe() {
     echo
     echo "Done – Good luck!"
   else
-      echo
-      echo "Cancelled."
+    echo
+    echo "Cancelled."
   fi
 
+}
+
+# function to list git branches that were pushed, which are now *GONE* from the remote.
+# *GENERALLY* these are my own merged+deleted branches)
+function tw_git_branch_wipe() {
+  branches=$(git branch -vv | grep ": gone]" | awk '{print $1}')
+  echo
+  echo $branches
+  echo
+  if read -q "confirm?This will forcibly wipe the above branches that no longer exist on the remote.
+
+    There is a risk of losing work done locally.
+
+  Are you sure? (y/N) "; then
+    echo
+    echo $branches | xargs git branch -D
+    echo
+    echo "Done - Good luck!"
+  else
+    echo
+    echo "Cancelled."
+  fi
 }
