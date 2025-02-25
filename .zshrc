@@ -18,6 +18,10 @@ source ~/.config/zsh/powerlevel10k/powerlevel10k.zsh-theme
 setopt extendedglob
 
 
+# engage prompt command for colourizing text
+autoload colors; colors
+
+
 # engage ZSH autocompletion
 autoload -Uz compinit && compinit
 
@@ -69,38 +73,54 @@ EndOfMessage
   esac
 }
 
+RED=$fg[red]
+DEF=$reset_color
+
+function tw_confirm() {
+  if read -q "confirm?${RED}Are you sure? (y/N)${DEF} "; then
+    true
+  else
+    # echo here to nudge an end of line so echo's outside this function will behave as I expect
+    # I'm not sure why, but the `true` case above already seems to complete its line.
+    echo
+    false
+  fi
+}
+
 # function to completely wipe Docker
 function tw_docker_wipe() {
-  if read -q "confirm?This will:
-  • Stop all docker containers
-  • Prune all containers, images, volumes and networks
-  • Do a docker system prune including volumes
-  • Shut down docker-compose, removing orphans and volumes
-  Are you sure? (y/N) "; then
+  echo "🚨 This will:"
+  echo "   • Stop all docker containers"
+  echo "   • Prune all ${RED}containers, images, volumes and networks${DEF}"
+  echo "   • Do a ${RED}docker system prune${DEF} including ${RED}volumes${DEF}"
+  echo "   • Shut down ${RED}docker-compose${DEF}, removing ${RED}orphans and volumes${DEF}"
+  echo
+
+  if tw_confirm; then
     echo
-    echo "Stopping docker..."
+    echo "✋ Stopping docker..."
     docker stop $(docker ps -aq)
 
-    echo "Pruning containers..."
+    echo "📦 Pruning containers..."
     docker container prune -f
-    echo "Pruning images..."
+    echo "🖼️ Pruning images..."
     docker image prune -af
-    echo "Pruning volumes..."
+    echo "💾 Pruning volumes..."
     docker volume prune -f
-    echo "Pruning networks..."
+    echo "🔌 Pruning networks..."
     docker network prune -f
-    echo "Pruning system including volumes..."
+    echo "🖥️ Pruning system including volumes..."
     docker system prune -af --volumes
 
     echo
-    echo "Shutting down docker-compose, removing orphans and volumes..."
+    echo "🎼 Shutting down docker-compose, removing orphans and volumes..."
     docker-compose down --remove-orphans --volumes
 
     echo
-    echo "Done – Good luck!"
+    echo "👍 Done. Good luck!"
   else
     echo
-    echo "Cancelled."
+    echo "❎ Cancelled."
   fi
 
 }
@@ -108,21 +128,29 @@ function tw_docker_wipe() {
 # function to list git branches that were pushed, which are now *GONE* from the remote.
 # *GENERALLY* these are my own merged+deleted branches)
 function tw_git_branch_wipe() {
-  branches=$(git branch -vv | grep ": gone]" | awk '{print $1}')
+  branches=$(git fetch --prune && git branch -vv | grep ": gone]" | awk '{print $1}')
+
+  if [ ${#branches} -lt 1 ]; then
+    echo "🌲 No branches gone from the remote."
+    echo "👋 Bye!"
+    return
+  fi
+
   echo
+  echo "🥀 Branches gone from the remote:"
   echo $branches
   echo
-  if read -q "confirm?This will forcibly wipe the above branches that no longer exist on the remote.
+  echo "🚨 This will ${RED}forcibly wipe${DEF} the above branches that no longer exist on the remote."
+  echo "   You could ${RED}lose work${DEF} done locally."
+  echo
 
-    There is a risk of losing work done locally.
-
-  Are you sure? (y/N) "; then
+  if tw_confirm; then
     echo
     echo $branches | xargs git branch -D
     echo
-    echo "Done - Good luck!"
+    echo "👍 Done. Good luck!"
   else
     echo
-    echo "Cancelled."
+    echo "❎ Cancelled."
   fi
 }
