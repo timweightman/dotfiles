@@ -76,6 +76,10 @@ EndOfMessage
 RED=$fg[red]
 DEF=$reset_color
 
+function quiet() {
+  $@ >/dev/null
+}
+
 function tw_confirm() {
   if read -q "confirm?${RED}Are you sure? (y/N)${DEF} "; then
     true
@@ -122,13 +126,15 @@ function tw_docker_wipe() {
     echo
     echo "❎ Cancelled."
   fi
-
 }
 
 # function to list git branches that were pushed, which are now *GONE* from the remote.
 # *GENERALLY* these are my own merged+deleted branches)
 function tw_git_branch_wipe() {
-  branches=$(git fetch --prune && git branch -vv | grep ": gone]" | awk '{print $1}')
+  echo "👀 Checking latest branches on remote..."
+  quiet git fetch
+
+  branches=$(git branch -vv | grep ": gone]" | awk '{print $1}')
 
   if [ ${#branches} -lt 1 ]; then
     echo "🌲 No branches gone from the remote."
