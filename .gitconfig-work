@@ -1,13 +1,13 @@
 [user]
     email = "tim.weightman@upguard.com"
     name = "Tim Weightman"
-# [core]
-#     sshCommand = "ssh -i ~/.ssh/id_ed25519_github_work"
+[core]
+    sshCommand = "ssh -i ~/.ssh/id_ed25519_github_work"
 
-# [url "git@github.com-work"]
-#     insteadOf = git@github.com
-#     pushInsteadOf = git@github.com
+[url "git@github.com-work"]
+    insteadOf = git@github.com
+    pushInsteadOf = git@github.com
 
-# [url "git@github.com-work:timweightman-zai"]
-#     insteadOf = git@github.com:timweightman-zai
-#     pushInsteadOf = git@github.com:timweightman-zai
+[url "git@github.com-work:tim-upguard"]
+    insteadOf = git@github.com:tim-upguard
+    pushInsteadOf = git@github.com:tim-upguard

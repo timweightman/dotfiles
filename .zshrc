@@ -63,12 +63,17 @@ function tw() {
       tw_git_branch_wipe
       ;;
 
+    ssh-reload)
+      reload_ssh_keys
+      ;;
+
     *)
       cat << EndOfMessage
 Usage: tw <command>
 Commands:
   dw - Docker wipe
   gbw - Git branches wipe
+  ssh-reload - Reload SSH keys
 EndOfMessage
   esac
 }
@@ -159,4 +164,19 @@ function tw_git_branch_wipe() {
     echo
     echo "❎ Cancelled."
   fi
+}
+
+# reload SSH keys
+# Function to reload SSH keys
+function reload_ssh_keys() {
+  echo "Reloading SSH keys..."
+  # Kill any existing ssh-agent processes
+  pkill ssh-agent 2>/dev/null
+  # Start a new ssh-agent
+  eval "$(ssh-agent -s)"
+  # Add all keys in ~/.ssh that look like private keys
+  find ~/.ssh -type f -name "id_*" ! -name "*.pub" | while read key; do
+    ssh-add "$key" 2>/dev/null && echo "Added key: $key"
+  done
+  echo "👍 SSH keys reloaded successfully."
 }
