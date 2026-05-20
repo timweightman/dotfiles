@@ -170,13 +170,22 @@ function tw_git_branch_wipe() {
 # Function to reload SSH keys
 function reload_ssh_keys() {
   echo "Reloading SSH keys..."
-  # Kill any existing ssh-agent processes
-  pkill ssh-agent 2>/dev/null
-  # Start a new ssh-agent
-  eval "$(ssh-agent -s)"
+  # Check if ssh-agent is already running
+  if ! pgrep -u "$USER" ssh-agent > /dev/null; then
+    echo "No ssh-agent detected. Starting a new ssh-agent..."
+    eval "$(ssh-agent -s)"
+  else
+    echo "ssh-agent is already running. Skipping start."
+  fi
   # Add all keys in ~/.ssh that look like private keys
   find ~/.ssh -type f -name "id_*" ! -name "*.pub" | while read key; do
-    ssh-add "$key" 2>/dev/null && echo "Added key: $key"
+    ssh-add --apple-use-keychain "$key" 2>/dev/null && echo "Added key: $key"
   done
   echo "👍 SSH keys reloaded successfully."
 }
+
+# Disable warning from POWERLEVEL9K about console output during startup
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+
+# Run my own functions on shell startup, which often have console output
+tw ssh-reload
