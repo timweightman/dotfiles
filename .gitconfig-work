@@ -1,8 +1,6 @@
 [user]
     email = "tim.weightman@upguard.com"
     name = "Tim Weightman"
-[core]
-    sshCommand = "ssh -i ~/.ssh/id_ed25519_github_work"
 
 [url "git@github.com-work"]
     insteadOf = git@github.com

@@ -167,18 +167,15 @@ function tw_git_branch_wipe() {
 }
 
 # reload SSH keys
-# Function to reload SSH keys
 function reload_ssh_keys() {
   echo "Reloading SSH keys..."
-  # Check if ssh-agent is already running
-  if ! pgrep -u "$USER" ssh-agent > /dev/null; then
-    echo "No ssh-agent detected. Starting a new ssh-agent..."
+  # A process named ssh-agent can exist while this shell has no (or a stale) SSH_AUTH_SOCK
+  # (e.g. GUI terminals). Always ensure this session has a live socket before ssh-add.
+  if [[ -z "$SSH_AUTH_SOCK" ]] || [[ ! -S "$SSH_AUTH_SOCK" ]]; then
+    echo "Starting ssh-agent for this shell..."
     eval "$(ssh-agent -s)"
-  else
-    echo "ssh-agent is already running. Skipping start."
   fi
-  # Add all keys in ~/.ssh that look like private keys
-  find ~/.ssh -type f -name "id_*" ! -name "*.pub" | while read key; do
+  find ~/.ssh -type f -name "id_*" ! -name "*.pub" | while read -r key; do
     ssh-add --apple-use-keychain "$key" 2>/dev/null && echo "Added key: $key"
   done
   echo "👍 SSH keys reloaded successfully."

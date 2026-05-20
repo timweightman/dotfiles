@@ -2,7 +2,7 @@
   	path = .gitconfig-personal
 [includeIf "gitdir:~/dotfiles/"]
   	path = .gitconfig-personal
-[includeIf "gitdir:~"]
+[includeIf "gitdir:~/Work/"]
   	path = .gitconfig-work
 [diff]
     tool = default-difftool
