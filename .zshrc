@@ -13,6 +13,13 @@ bindkey "^[[B" down-line-or-beginning-search # Down
 bindkey "^[OA" up-line-or-beginning-search # Up
 bindkey "^[OB" down-line-or-beginning-search # Down
 
+# Autocompletion
+autoload -Uz compinit
+compinit
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+
 # custom shortcut functions for specific tasks
 # tw <command>
 function tw() {
