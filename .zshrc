@@ -80,8 +80,8 @@ Usage: tw <command>
 Commands:
   init - Initialize dev environment (installs helix)
   dw - Docker wipe
-  gbw - Git branches wipe
-  gww - Git worktrees wipe
+  gbw - Git branches wipe (merged/closed/gone)
+  gww - Git worktrees wipe (merged/closed/gone)
   ssh-reload - Reload SSH keys
   kill <port> - Kill process listening on a specific port
 EndOfMessage
@@ -94,8 +94,8 @@ function _tw() {
   commands=(
     'init:Initialize dev environment (installs helix)'
     'dw:Docker wipe'
-    'gbw:Git branches wipe'
-    'gww:Git worktrees wipe'
+    'gbw:Git branches wipe (merged/closed/gone)'
+    'gww:Git worktrees wipe (merged/closed/gone)'
     'ssh-reload:Reload SSH keys'
     'kill:Kill process listening on a specific port'
   )
@@ -158,31 +158,84 @@ function tw_docker_wipe() {
   fi
 }
 
-# function to list git branches that were pushed, which are now *GONE* from the remote.
-# *GENERALLY* these are my own merged+deleted branches)
+# prints "<branch>\t<reason>\t<worktreepath>" for local branches that are done:
+# upstream is [gone], or no upstream and my PR for it is merged/closed with no open PR.
+function tw_git_done_branches() {
+  local -A open_prs done_prs
+  local pr_list state number head line branch upstream track worktree reason
+  local -a fields
+
+  if (( $+commands[gh] )) && pr_list=$(gh pr list --author @me --state all --limit 500 \
+    --json number,state,headRefName --jq '.[] | [.state, (.number|tostring), .headRefName] | @tsv' 2>/dev/null); then
+    # gh lists newest first, so the first merged/closed PR seen for a branch wins.
+    while IFS=$'\t' read -r state number head; do
+      [[ -z "$head" ]] && continue
+      if [[ "$state" == OPEN ]]; then
+        open_prs[$head]=$number
+      elif [[ -z "${done_prs[$head]}" ]]; then
+        done_prs[$head]="PR #$number ${(L)state}"
+      fi
+    done <<< "$pr_list"
+  else
+    echo "⚠️  gh unavailable, only checking branches with a gone upstream" >&2
+  fi
+
+  while IFS= read -r line; do
+    fields=("${(@ps:\t:)line}")
+    branch=$fields[1] upstream=$fields[2] track=$fields[3] worktree=$fields[4]
+    if [[ "$track" == "[gone]" ]]; then
+      reason="remote branch gone"
+    elif [[ -z "$upstream" && -n "${done_prs[$branch]}" && -z "${open_prs[$branch]}" ]] \
+      && ! git show-ref --quiet --verify "refs/remotes/origin/$branch"; then
+      reason=$done_prs[$branch]
+    else
+      continue
+    fi
+    print -r -- "$branch"$'\t'"$reason"$'\t'"$worktree"
+  done < <(git for-each-ref --format='%(refname:short)%09%(upstream)%09%(upstream:track)%09%(worktreepath)' refs/heads)
+}
+
+# function to wipe local branches that are merged/closed or gone from the remote.
+# Branches checked out in a worktree are left for gww.
 function tw_git_branch_wipe() {
   echo "👀 Checking latest branches on remote..."
-  quiet git fetch
+  quiet git fetch --prune
 
-  branches=$(git branch -vv | grep ": gone]" | awk '{print $1}')
+  local -a done_branches done_reasons
+  local branch reason worktree skipped=0 i
 
-  if [ ${#branches} -lt 1 ]; then
-    echo "🌲 No branches gone from the remote."
+  while IFS=$'\t' read -r branch reason worktree; do
+    if [[ -n "$worktree" ]]; then
+      (( ++skipped ))
+      continue
+    fi
+    done_branches+=("$branch")
+    done_reasons+=("$reason")
+  done < <(tw_git_done_branches)
+
+  if (( skipped > 0 )); then
+    echo "💡 $skipped gone branch(es) are checked out in worktrees, use tw gww for those."
+  fi
+
+  if [ ${#done_branches} -lt 1 ]; then
+    echo "🌲 No merged/closed branches found."
     echo "👋 Bye!"
     return
   fi
 
   echo
-  echo "🥀 Branches gone from the remote:"
-  echo $branches
+  echo "🥀 Merged/closed branches:"
+  for i in {1..${#done_branches}}; do
+    echo "$done_branches[$i]  ($done_reasons[$i])"
+  done
   echo
-  echo "🚨 This will ${RED}forcibly wipe${DEF} the above branches that no longer exist on the remote."
+  echo "🚨 This will ${RED}forcibly wipe${DEF} the above branches."
   echo "   You could ${RED}lose work${DEF} done locally."
   echo
 
   if tw_confirm; then
     echo
-    echo $branches | xargs git branch -D
+    git branch -D "${done_branches[@]}"
     echo
     echo "👍 Done. Good luck!"
   else
@@ -191,52 +244,38 @@ function tw_git_branch_wipe() {
   fi
 }
 
-# function to list git worktrees whose branches were pushed, but are now *GONE* from the remote.
+# function to wipe worktrees whose branches are merged/closed or gone from the remote.
 # (same idea as gbw, but also removes the worktree checkout)
 function tw_git_worktree_wipe() {
   echo "👀 Checking latest branches on remote..."
   quiet git fetch --prune
   quiet git worktree prune
 
-  local -a gone_paths gone_branches
-  local line entry_path entry_branch current_dir=${PWD:A} is_main_entry=true i
+  local -a gone_paths gone_branches gone_reasons
+  local branch reason worktree current_dir=${PWD:A} i
+  local main_worktree=${$(git worktree list --porcelain | head -1)#worktree }
 
-  # Each porcelain entry ends with a blank line; the extra echo makes sure the last entry is flushed.
-  while IFS= read -r line; do
-    case "$line" in
-      "worktree "*)
-        entry_path=${line#worktree }
-        ;;
-      "branch refs/heads/"*)
-        entry_branch=${line#branch refs/heads/}
-        ;;
-      "")
-        if [[ -n "$entry_path" ]] && ! $is_main_entry && [[ -n "$entry_branch" ]] \
-          && [[ "$(git for-each-ref --format='%(upstream:track)' "refs/heads/$entry_branch")" == "[gone]" ]]; then
-          if [[ "$current_dir" == "$entry_path" || "$current_dir" == "$entry_path"/* ]]; then
-            echo "⚠️  Skipping ${RED}$entry_branch${DEF} as you are inside its worktree: $entry_path"
-          else
-            gone_paths+=("$entry_path")
-            gone_branches+=("$entry_branch")
-          fi
-        fi
-        [[ -n "$entry_path" ]] && is_main_entry=false
-        entry_path=
-        entry_branch=
-        ;;
-    esac
-  done < <(git worktree list --porcelain; echo)
+  while IFS=$'\t' read -r branch reason worktree; do
+    [[ -z "$worktree" || "$worktree" == "$main_worktree" ]] && continue
+    if [[ "$current_dir" == "$worktree" || "$current_dir" == "$worktree"/* ]]; then
+      echo "⚠️  Skipping ${RED}$branch${DEF} as you are inside its worktree: $worktree"
+      continue
+    fi
+    gone_paths+=("$worktree")
+    gone_branches+=("$branch")
+    gone_reasons+=("$reason")
+  done < <(tw_git_done_branches)
 
   if [ ${#gone_paths} -lt 1 ]; then
-    echo "🌲 No worktrees with branches gone from the remote."
+    echo "🌲 No worktrees with merged/closed branches found."
     echo "👋 Bye!"
     return
   fi
 
   echo
-  echo "🥀 Worktrees with branches gone from the remote:"
+  echo "🥀 Worktrees with merged/closed branches:"
   for i in {1..${#gone_paths}}; do
-    echo "$gone_branches[$i]  →  $gone_paths[$i]"
+    echo "$gone_branches[$i]  →  $gone_paths[$i]  ($gone_reasons[$i])"
   done
   echo
   echo "🚨 This will ${RED}forcibly remove${DEF} the above worktrees, ${RED}including uncommitted and untracked files${DEF},"
