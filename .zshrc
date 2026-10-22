@@ -159,11 +159,18 @@ function tw_docker_wipe() {
 }
 
 # prints "<branch>\t<reason>\t<worktreepath>" for local branches that are done:
-# upstream is [gone], or no upstream and my PR for it is merged/closed with no open PR.
+# upstream is [gone], or its upstream is not its own remote branch and my PR for it is merged/closed with no open PR.
 function tw_git_done_branches() {
   local -A open_prs done_prs
-  local pr_list state number head line branch upstream track worktree reason
-  local -a fields
+  local pr_list state number head line branch track worktree remote remoteref reason default_remote
+  local -a fields remotes
+
+  remotes=(${(f)"$(git remote)"})
+  if (( ${remotes[(Ie)origin]} )); then
+    default_remote=origin
+  else
+    default_remote=$remotes[1]
+  fi
 
   if (( $+commands[gh] )) && pr_list=$(gh pr list --author @me --state all --limit 500 \
     --json number,state,headRefName --jq '.[] | [.state, (.number|tostring), .headRefName] | @tsv' 2>/dev/null); then
@@ -182,17 +189,23 @@ function tw_git_done_branches() {
 
   while IFS= read -r line; do
     fields=("${(@ps:\t:)line}")
-    branch=$fields[1] upstream=$fields[2] track=$fields[3] worktree=$fields[4]
+    branch=$fields[1] track=$fields[2] worktree=$fields[3] remote=$fields[4] remoteref=$fields[5]
+    [[ -z "$remote" || "$remote" == "." ]] && remote=$default_remote
     if [[ "$track" == "[gone]" ]]; then
       reason="remote branch gone"
-    elif [[ -z "$upstream" && -n "${done_prs[$branch]}" && -z "${open_prs[$branch]}" ]] \
-      && ! git show-ref --quiet --verify "refs/remotes/origin/$branch"; then
+    elif [[ "$remoteref" != "refs/heads/$branch" && -n "${done_prs[$branch]}" && -z "${open_prs[$branch]}" ]] \
+      && ! git show-ref --quiet --verify "refs/remotes/$remote/$branch"; then
       reason=$done_prs[$branch]
     else
       continue
     fi
     print -r -- "$branch"$'\t'"$reason"$'\t'"$worktree"
-  done < <(git for-each-ref --format='%(refname:short)%09%(upstream)%09%(upstream:track)%09%(worktreepath)' refs/heads)
+  done < <(git for-each-ref \
+    --format='%(refname:short)%09%(upstream:track)%09%(worktreepath)%09%(upstream:remotename)%09%(upstream:remoteref)' refs/heads)
+}
+
+function tw_git_main_worktree() {
+  print -r -- "${$(git worktree list --porcelain | head -1)#worktree }"
 }
 
 # function to wipe local branches that are merged/closed or gone from the remote.
@@ -203,9 +216,13 @@ function tw_git_branch_wipe() {
 
   local -a done_branches done_reasons
   local branch reason worktree skipped=0 i
+  local main_worktree=$(tw_git_main_worktree)
 
   while IFS=$'\t' read -r branch reason worktree; do
-    if [[ -n "$worktree" ]]; then
+    if [[ -n "$worktree" && "$worktree" == "$main_worktree" ]]; then
+      echo "💡 $branch is done but checked out in the main worktree, switch branch and rerun tw gbw."
+      continue
+    elif [[ -n "$worktree" ]]; then
       (( ++skipped ))
       continue
     fi
@@ -214,7 +231,7 @@ function tw_git_branch_wipe() {
   done < <(tw_git_done_branches)
 
   if (( skipped > 0 )); then
-    echo "💡 $skipped gone branch(es) are checked out in worktrees, use tw gww for those."
+    echo "💡 $skipped done branch(es) are checked out in worktrees, use tw gww for those."
   fi
 
   if [ ${#done_branches} -lt 1 ]; then
@@ -253,7 +270,7 @@ function tw_git_worktree_wipe() {
 
   local -a gone_paths gone_branches gone_reasons
   local branch reason worktree current_dir=${PWD:A} i
-  local main_worktree=${$(git worktree list --porcelain | head -1)#worktree }
+  local main_worktree=$(tw_git_main_worktree)
 
   while IFS=$'\t' read -r branch reason worktree; do
     [[ -z "$worktree" || "$worktree" == "$main_worktree" ]] && continue
